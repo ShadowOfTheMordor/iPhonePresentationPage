@@ -89,5 +89,111 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
+    const accordion = () => {
+        const characteristicsListElem = document.querySelector(".characteristics__list");
+        const characteristicsItemElems = document.querySelectorAll(".characteristics__item");
+
+        const open = (button, dropDown) => {
+            closeAllDrops();
+
+            dropDown.style.height = `${dropDown.scrollHeight}px`;
+            button.classList.add("active");
+            dropDown.classList.add("active");
+        };
+
+        const close = (button, dropDown) => {
+            button.classList.remove("active");
+            dropDown.classList.remove("active");
+            dropDown.style.height = "";
+        };
+
+        const closeAllDrops = () => {
+            characteristicsItemElems.forEach((item) => {
+                // console.log(item);
+                const button = item.querySelector(".characteristics__title");
+                const dropDown = item.querySelector(".characteristics__description");
+                if (button.classList.contains("active")) {
+                    close(button, dropDown);
+                }
+                
+            });
+        };
+
+        characteristicsListElem.addEventListener("click", (event) => {
+            const target = event.target;
+            if (!target.classList.contains("characteristics__title")) {
+                return;
+            }
+
+            const parent = target.closest(".characteristics__item");
+            // console.log(parent);
+            const dropDown = parent.querySelector(".characteristics__description");
+
+            dropDown.classList.contains("active") ?
+                close(target, dropDown) :
+                open(target, dropDown);
+        });
+    };
+
+    const modal = () => {
+        const cardDetailsButtonBuy = document.querySelector(".card-details__button_buy");
+        const cardDetailsButtonDelivery = document.querySelector(".card-details__button_delivery");
+        
+        const modal = document.querySelector(".modal");
+        const modalTitle = modal.querySelector(".modal__title");
+        const modalSubtitle = modal.querySelector(".modal__subtitle");
+        // const modalForm = modal.querySelector("form");
+        const modalSubmit = modal.querySelector(".modal__submit");
+        const modalClose = modal.querySelector(".modal__close");
+
+        const closeModal = (event) => {
+            const target = event.target;
+            console.log(target);
+            console.log("contains " + target.classList.contains(".modal__submit"));
+            if (target === modalSubmit || target === modalClose || target === modal) {
+                if (target === modalSubmit) {
+                    event.preventDefault();
+                }
+                modal.classList.remove("open");
+                console.log(modal);
+            }
+            // modal.classList.remove("open");
+        };
+
+        // modalSubmit.addEventListener("click", (event) => {
+        //     event.preventDefault();
+        // });
+
+        // modalClose.addEventListener("click", closeModal);
+
+        const getTitle = () => {
+            const cardDetailsTitleElem = document.querySelector(".card-details__title");
+            return cardDetailsTitleElem.textContent;
+        };
+
+        cardDetailsButtonBuy.addEventListener("click", (event) => {
+            modalTitle.textContent = getTitle();
+            modalSubtitle.textContent = "Оплата";
+            modal.classList.add("open");
+        });
+
+        cardDetailsButtonDelivery.addEventListener("click", (event) => {
+            modalTitle.textContent = getTitle();
+            modalSubtitle.textContent = "Доставка и оплата";
+            modal.classList.add("open");
+        });
+
+        modal.addEventListener("click", closeModal);
+        modal.addEventListener("keydown", (event) => {
+            console.log(event);
+            if (event.key === "Escape") {
+                closeModal(event);
+            }
+        });
+    };
+
     tabs();
+    accordion();
+
+    modal();
 });
