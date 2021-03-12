@@ -1,6 +1,148 @@
 document.addEventListener("DOMContentLoaded", () => {
     'use strict';
 
+
+    const getData = (url, callback) => {
+        const request = new XMLHttpRequest();
+        request.open("GET", url);
+        console.log(request.readyState);
+        request.addEventListener("readystatechange", () => {
+            console.log(request.readyState);
+            if (request.readyState !== 4) {
+                return;
+            }
+            if (request.status === 200) {
+                const response = JSON.parse(request.response);
+                callback(response);
+            } else {
+                // console.log(new Error("Ошибка: " + request.status));
+                alert(new Error("Ошибка при загрузке данных: " + request.status));
+            }
+//            console.log(request);
+        });
+        request.send();
+    };
+
+    
+    const loadSellItems = () => {
+        const cardDetailsButtonBuy = document.querySelector(".card-details__button_buy");
+        
+        const modal = document.querySelector(".modal");
+        const modalTitle = modal.querySelector(".modal__title");
+        const modalSubtitle = modal.querySelector(".modal__subtitle");
+        const modalSubmit = modal.querySelector(".modal__submit");
+        const modalClose = modal.querySelector(".modal__close");
+        //для очистки при закрытии
+        const modalLabelElems = modal.querySelectorAll(".modal__label");
+        // 
+        const modalTitleSubmit = modal.querySelector(".modal__title-submit");
+
+        const openModal = () => {
+            document.addEventListener("keydown", escapeHandler);
+            modal.classList.add("open");
+        };
+
+        const closeModal = () => {
+            document.removeEventListener("keydown", escapeHandler);
+            modal.classList.remove("open");
+            modalLabelElems.forEach((labelElem) => {
+                const labelInput = labelElem.querySelector(".modal__input");
+                if (labelInput) {
+                    labelInput.value = "";
+                }
+            });
+        };
+
+        modal.addEventListener("click", (event) => {
+            const target = event.target;
+            if (target === modalSubmit || target === modalClose || target === modal) {
+                if (target === modalSubmit) {
+                    event.preventDefault();
+                }
+                closeModal();
+            }
+        });
+        const escapeHandler = (event) => {
+            if (event.code === "Escape") {
+                closeModal();
+            }
+        };
+
+        const createCrossSellItem = (item) => {
+            const liElement = document.createElement("li");
+            liElement.classList.add("cross-sell__item");
+            liElement.innerHTML = `
+						<article class="cross-sell__item">
+							<input type="text" class = "cross__sell-submit visually-hidden" name="name-sub-item" value = "${item.id}" disabled>
+							<img class="cross-sell__image" src="${item.photo}" alt="">
+							<h3 class="cross-sell__title">${item.name}</h3>
+							<p class="cross-sell__price">${item.price}₽</p>
+							<button type="button" class="button button_buy cross-sell__button">Купить</button>
+						</article>
+            `;
+            return liElement;
+        };
+
+        const createCrossSellList = (goods) => {
+            const crossSellList = document.querySelector(".cross-sell__list");
+
+            //очистка
+            while(crossSellList.hasChildNodes()) {
+                crossSellList.removeChild(crossSellList.firstChild);
+            }
+            //4 элемента
+            const arrayIndex = Array();
+            for (let i = 0; i < 4; i++) {
+                const itemCount = goods.length;
+                //уникальность
+                while(true) {
+                    const randomIndex = Math.round(Math.random() * (itemCount - 1));
+                    if (arrayIndex.find((value, index) => {
+                        return value === randomIndex;
+                    })) {
+                        continue;
+                    }
+                    const goodItem = goods[randomIndex];
+                    arrayIndex.push(randomIndex);
+                    const crossSellItem = createCrossSellItem(goodItem); 
+                    crossSellList.append(crossSellItem);
+
+                    const crossSellButton = crossSellItem.querySelector(".cross-sell__button");
+                    crossSellButton.addEventListener("click", (event) => {
+                        const target = event.target;
+                        const crossSellItem = target.closest(".cross-sell__item");
+                        // console.log(crossSellItem);
+                        const crossSellTitle = crossSellItem.querySelector(".cross-sell__title");
+                        const crossSellSubmit = crossSellItem.querySelector(".cross__sell-submit");
+
+                        modalSubtitle.textContent = "Купить";
+                        modalTitle.textContent = crossSellTitle.textContent;
+                        modalTitleSubmit.value = crossSellSubmit.value;
+
+                        modalLabelElems.forEach((labelElem, index) => {
+                            if (index === 2) {
+                                labelElem.classList.add("active");
+                            } else {
+                                labelElem.classList.remove("active");
+                            }
+                        });
+            
+                        const innerData = goodItem;
+                        // console.log(innerData);
+                        openModal();
+                    });
+                    break;
+                }
+            }
+            // console.log(arrayIndex);
+
+        };
+
+        getData("./cross-sell-dbase/dbase.json", createCrossSellList);
+    
+    };
+
+
     const tabs = () => {
 
         const cardDetailChangeElems = document.querySelectorAll(".card-detail__change");
@@ -83,6 +225,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 
                 btn.classList.add("active");
                 changeParameters(index);
+                //перезагрузка допов
+                loadSellItems();
             });
         });
     };
@@ -138,6 +282,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const modal = () => {
         const cardDetailsButtonBuy = document.querySelector(".card-details__button_buy");
         const cardDetailsButtonDelivery = document.querySelector(".card-details__button_delivery");
+        const cardDetailsTitle = document.querySelector(".card-details__title");
         
         const modal = document.querySelector(".modal");
         const modalTitle = modal.querySelector(".modal__title");
@@ -145,55 +290,76 @@ document.addEventListener("DOMContentLoaded", () => {
         // const modalForm = modal.querySelector("form");
         const modalSubmit = modal.querySelector(".modal__submit");
         const modalClose = modal.querySelector(".modal__close");
+        //для очистки при закрытии
+        const modalLabelElems = modal.querySelectorAll(".modal__label");
+        // 
+        const modalTitleSubmit = modal.querySelector(".modal__title-submit");
 
-        const closeModal = (event) => {
+        const openModal = () => {
+            modalTitle.textContent = cardDetailsTitle.textContent;
+            document.addEventListener("keydown", escapeHandler);
+            modal.classList.add("open");
+            modalTitleSubmit.value = cardDetailsTitle.textContent;
+            // console.log(modalTitleSubmit.value);
+        };
+
+        const closeModal = () => {
+            document.removeEventListener("keydown", escapeHandler);
+            modal.classList.remove("open");
+            modalLabelElems.forEach((labelElem) => {
+                const labelInput = labelElem.querySelector(".modal__input");
+                if (labelInput) {
+                    labelInput.value = "";
+                }
+            });
+        };
+
+
+
+        cardDetailsButtonBuy.addEventListener("click", (event) => {
+            modalSubtitle.textContent = event.target.dataset.buttonBuy;
+            modalLabelElems.forEach((labelElem, index) => {
+                if (index === 2) {
+                    labelElem.classList.add("active");
+                } else {
+                    labelElem.classList.remove("active");
+                }
+            });
+            openModal();
+        });
+
+        cardDetailsButtonDelivery.addEventListener("click", (event) => {
+            modalSubtitle.textContent = event.target.dataset.buttonBuy;
+            // console.log(event.target.dataset.buttonBuy);
+            modalLabelElems.forEach((labelElem, index) => {
+                labelElem.classList.add("active");
+            });
+            openModal();
+        });
+
+        modal.addEventListener("click", (event) => {
             const target = event.target;
-            console.log(target);
-            console.log("contains " + target.classList.contains(".modal__submit"));
             if (target === modalSubmit || target === modalClose || target === modal) {
                 if (target === modalSubmit) {
                     event.preventDefault();
                 }
-                modal.classList.remove("open");
-                console.log(modal);
-            }
-            // modal.classList.remove("open");
-        };
-
-        // modalSubmit.addEventListener("click", (event) => {
-        //     event.preventDefault();
-        // });
-
-        // modalClose.addEventListener("click", closeModal);
-
-        const getTitle = () => {
-            const cardDetailsTitleElem = document.querySelector(".card-details__title");
-            return cardDetailsTitleElem.textContent;
-        };
-
-        cardDetailsButtonBuy.addEventListener("click", (event) => {
-            modalTitle.textContent = getTitle();
-            modalSubtitle.textContent = "Оплата";
-            modal.classList.add("open");
-        });
-
-        cardDetailsButtonDelivery.addEventListener("click", (event) => {
-            modalTitle.textContent = getTitle();
-            modalSubtitle.textContent = "Доставка и оплата";
-            modal.classList.add("open");
-        });
-
-        modal.addEventListener("click", closeModal);
-        modal.addEventListener("keydown", (event) => {
-            console.log(event);
-            if (event.key === "Escape") {
-                closeModal(event);
+                closeModal();
             }
         });
+        const escapeHandler = (event) => {
+            // console.log("escapeHandler");
+            if (event.code === "Escape") {
+                // console.log("inside");
+                closeModal();
+            }
+        };
     };
 
     tabs();
     accordion();
 
     modal();
+
+    loadSellItems();
+
 });

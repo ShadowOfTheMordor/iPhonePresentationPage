@@ -480,6 +480,8 @@ h1, h2, h3, p, ul {
     margin-bottom: 30px;
 }
 
+
+
 .cross-sell__image {
     box-shadow: 0 2px 6px 1px rgba(0, 0, 0, 0.1);
     margin-bottom: 12px;
@@ -568,9 +570,13 @@ h1, h2, h3, p, ul {
 }
 
 .modal__label {
-    display: flex;
+    display: none;
     margin-bottom: 12px;
     align-items: center;
+}
+
+.modal__label.active {
+    display:flex;
 }
 
 .modal__label-text {
