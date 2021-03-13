@@ -7,7 +7,9 @@
 	<title>iPhone</title>
 
 	<link rel="stylesheet" href="./css/style.css">
+	<link rel="stylesheet" href="./libs/amenu/amenu.css">
 
+	<script src="./libs/amenu/amenu.js" defer></script>
 	<script src="./scripts/script.js" defer></script>
 
 </head>
@@ -24,7 +26,9 @@
 					<li class="header-menu__item"><a href="#">Отзывы</a></li>
 					<li class="header-menu__item"><a href="#">Условия доставки</a></li>
 				</ul>
-				<div class="header-menu__burger"></div>
+				<div class="header-menu__burger" style = "
+					display: none;
+				"></div>
 			</nav>
 		</div>
 	</header>
@@ -378,6 +382,7 @@
 			<div class="container">
 				<h2 class="cross-sell__main-title main-title">Дополняют этот товар</h2>
 				<ul class="cross-sell__list"></ul>
+				<button class="button cross-sell__add" >Показать еще</button>
 
 			</div>
 		</section>

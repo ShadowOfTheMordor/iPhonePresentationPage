@@ -510,6 +510,17 @@ h1, h2, h3, p, ul {
 
 }
 
+.cross-sell__add {
+    display: none;
+    margin-top: auto;
+    text-align: center;
+    align-items: center;
+}
+
+.cross-sell__add.active {
+    display: flex;
+}
+
 @media (max-width: 968px) {
     .cross-sell__list {
         max-width: 560px;

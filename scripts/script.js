@@ -5,9 +5,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const getData = (url, callback) => {
         const request = new XMLHttpRequest();
         request.open("GET", url);
-        console.log(request.readyState);
+        // console.log(request.readyState);
         request.addEventListener("readystatechange", () => {
-            console.log(request.readyState);
+            // console.log(request.readyState);
             if (request.readyState !== 4) {
                 return;
             }
@@ -36,6 +36,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const modalLabelElems = modal.querySelectorAll(".modal__label");
         // 
         const modalTitleSubmit = modal.querySelector(".modal__title-submit");
+
+
+        const crossSellAdd = document.querySelector(".cross-sell__add");
+
+        const allGoods = [];
 
         const openModal = () => {
             document.addEventListener("keydown", escapeHandler);
@@ -68,75 +73,101 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         };
 
+        const shuffleArray = (arr) => arr.sort(() => Math.random() - 0.5);
+       
+
         const createCrossSellItem = (item) => {
             const liElement = document.createElement("li");
             liElement.classList.add("cross-sell__item");
+            const {id, name, photo: picture, price} = item;
             liElement.innerHTML = `
 						<article class="cross-sell__item">
-							<input type="text" class = "cross__sell-submit visually-hidden" name="name-sub-item" value = "${item.id}" disabled>
-							<img class="cross-sell__image" src="${item.photo}" alt="">
-							<h3 class="cross-sell__title">${item.name}</h3>
-							<p class="cross-sell__price">${item.price}₽</p>
+							<input type="text" class = "cross__sell-submit visually-hidden" name="name-sub-item" value = "${id}" disabled>
+							<img class="cross-sell__image" src="${picture}" alt="${name}">
+							<h3 class="cross-sell__title">${name}</h3>
+							<p class="cross-sell__price">${price}₽</p>
 							<button type="button" class="button button_buy cross-sell__button">Купить</button>
 						</article>
             `;
             return liElement;
         };
 
-        const createCrossSellList = (goods) => {
-            const crossSellList = document.querySelector(".cross-sell__list");
-
-            //очистка
-            while(crossSellList.hasChildNodes()) {
-                crossSellList.removeChild(crossSellList.firstChild);
+        const clearUnsortedList = (list) => {
+            while(list.hasChildNodes()) {
+                list.removeChild(list.firstChild);
             }
-            //4 элемента
-            const arrayIndex = Array();
-            for (let i = 0; i < 4; i++) {
-                const itemCount = goods.length;
-                //уникальность
-                while(true) {
-                    const randomIndex = Math.round(Math.random() * (itemCount - 1));
-                    if (arrayIndex.find((value, index) => {
-                        return value === randomIndex;
-                    })) {
-                        continue;
-                    }
-                    const goodItem = goods[randomIndex];
-                    arrayIndex.push(randomIndex);
-                    const crossSellItem = createCrossSellItem(goodItem); 
-                    crossSellList.append(crossSellItem);
+        };
 
-                    const crossSellButton = crossSellItem.querySelector(".cross-sell__button");
-                    crossSellButton.addEventListener("click", (event) => {
-                        const target = event.target;
-                        const crossSellItem = target.closest(".cross-sell__item");
-                        // console.log(crossSellItem);
-                        const crossSellTitle = crossSellItem.querySelector(".cross-sell__title");
-                        const crossSellSubmit = crossSellItem.querySelector(".cross__sell-submit");
+        const renderGoods = (arr, ulElem) => {
+            arr.forEach((goodItem) => {
+                const crossSellItem = createCrossSellItem(goodItem); 
+                ulElem.append(crossSellItem);
+ 
+                const crossSellButton = crossSellItem.querySelector(".cross-sell__button");
+                crossSellButton.addEventListener("click", (event) => {
+                    const target = event.target;
+                    const crossSellItem = target.closest(".cross-sell__item");
+                    // console.log(crossSellItem);
+                    const crossSellTitle = crossSellItem.querySelector(".cross-sell__title");
+                    const crossSellSubmit = crossSellItem.querySelector(".cross__sell-submit");
 
-                        modalSubtitle.textContent = "Купить";
-                        modalTitle.textContent = crossSellTitle.textContent;
-                        modalTitleSubmit.value = crossSellSubmit.value;
+                    modalSubtitle.textContent = "Купить";
+                    modalTitle.textContent = crossSellTitle.textContent;
+                    modalTitleSubmit.value = crossSellSubmit.value;
 
-                        modalLabelElems.forEach((labelElem, index) => {
-                            if (index === 2) {
-                                labelElem.classList.add("active");
-                            } else {
-                                labelElem.classList.remove("active");
-                            }
-                        });
-            
-                        const innerData = goodItem;
-                        // console.log(innerData);
-                        openModal();
+                    modalLabelElems.forEach((labelElem, index) => {
+                        if (index === 2) {
+                            labelElem.classList.add("active");
+                        } else {
+                            labelElem.classList.remove("active");
+                        }
                     });
-                    break;
-                }
-            }
-            // console.log(arrayIndex);
+        
+                    const innerData = goodItem;
+                    // console.log(innerData);
+                    openModal();
+                });
+            });
 
         };
+
+        const expandCrossSellList = (event) => {
+            const crossSellList = document.querySelector(".cross-sell__list");
+            const crossSellAdd = event.target;
+            // crossSellAdd.removeEventListener("click", expandCrossSellList);
+            crossSellAdd.classList.remove("active");
+            wrapRender(allGoods, crossSellList);
+            while (allGoods.length) {
+                allGoods.pop();
+            }
+
+        };
+
+        const wrapper = (fn, count) => {
+            let counter = 0;
+            return (...args) => {
+                if (counter === count) return;
+                counter++;
+                return fn(...args);
+            };
+        };
+
+        const wrapRender = wrapper(renderGoods, 2);
+
+        const createCrossSellList = (goods) => {
+            const crossSellList = document.querySelector(".cross-sell__list");
+            const shuffleGoods = shuffleArray(goods);
+
+            allGoods.push(...shuffleGoods);
+            const fourItems = allGoods.splice(0, 4);
+            //очистка
+            clearUnsortedList(crossSellList);
+            wrapRender(fourItems, crossSellList);
+            crossSellAdd.classList.add("active");
+        };
+
+        crossSellAdd.addEventListener("click", expandCrossSellList);
+
 
         getData("./cross-sell-dbase/dbase.json", createCrossSellList);
     
@@ -226,7 +257,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 btn.classList.add("active");
                 changeParameters(index);
                 //перезагрузка допов
-                loadSellItems();
+                // loadSellItems();
             });
         });
     };
@@ -362,4 +393,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loadSellItems();
 
+    amenu(".header__menu", ".header-menu__list", ".header-menu__item", ".header-menu__burger");
 });
